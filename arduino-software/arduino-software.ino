@@ -63,7 +63,7 @@ void parseCommand(char *command) {
       Serial.print(F("ERR INVALIDPOS "));
       Serial.println(position);
     } else {
-      Serial.print(F("CMD GOINGTO NONBLOCKING "));
+      Serial.print(F("CMD GOTO NONBLOCKING "));
       Serial.println(position);
       stepper.moveTo(positionMin + position * stepsPerPosition);
       positionReached = false;
