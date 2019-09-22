@@ -10,5 +10,5 @@ const float homeStepsPerSecond = 1000;
 const float acceleration = 1000;
 const long positionMin = 400;
 const long positionMax = 29000;
-const uint8_t positionsNum = 5;
+const uint8_t positionsNum = 7;
 const uint8_t commandLengthMax = 20;

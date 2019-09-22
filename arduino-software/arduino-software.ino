@@ -56,6 +56,8 @@ void parseCommand(char *command) {
     Serial.println(F("CMD HOME BLOCKING"));
     home();
     Serial.println(F("INF HOMED"));
+    /* Suppress POSREACHED message: */
+    positionReached = true;
   } else if (strstr(command, "GOTO ") == command) {
     /* Go to given position. */
     int position = atoi(strchr(command, ' ') + 1);
@@ -82,7 +84,7 @@ void loop() {
       Serial.println(F("ERR ENDSTOPUNEXPECTED"));
       endstopErrorPrinted = true;
     }
-    /* Suppress "Position reached." message: */
+    /* Suppress POSREACHED message: */
     positionReached = true;
     return;
   } else {
