@@ -87,7 +87,8 @@ void loop() {
     /* Suppress POSREACHED message: */
     positionReached = true;
     return;
-  } else {
+  } else if (endstopErrorPrinted) {
+    Serial.println(F("INF ENDSTOPRELEASED"));
     endstopErrorPrinted = false;
   }
   /* Check for new commands: */
