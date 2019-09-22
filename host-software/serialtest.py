@@ -68,6 +68,9 @@ with serial.Serial(sys.argv[1], 86400, timeout=0) as ser:
         sys.exit(2)
     print(f'Ready, {posNum} positions.')
 
+    ## Home:
+    home(ser)
+
     ## Move to all positions and back to zero:
     for p in range(1, posNum):
         moveto(ser, p)

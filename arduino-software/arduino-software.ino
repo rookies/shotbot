@@ -43,8 +43,6 @@ void setup() {
   stepper.setAcceleration(acceleration);
   /* Setup endstop switch: */
   pinMode(pinEndstop, INPUT);
-  /* Go to home position: */
-  home(); /* TODO: Enable melody */
   /* Report that we're ready: */
   Serial.print(F("INF READY POSNUM "));
   Serial.println(positionsNum);
@@ -54,7 +52,7 @@ void parseCommand(char *command) {
   if (strcmp(command, "HOME") == 0) {
     /* Go to home position. */
     Serial.println(F("CMD HOME BLOCKING"));
-    home();
+    home(); /* TODO: Add melody parameter. */
     Serial.println(F("INF HOMED"));
     /* Suppress POSREACHED message: */
     positionReached = true;
