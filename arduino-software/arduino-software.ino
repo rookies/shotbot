@@ -6,6 +6,7 @@ char command[commandLengthMax+1];
 uint8_t commandLength = 0;
 bool positionReached = true;
 bool endstopErrorPrinted = false;
+unsigned long pumpFinished = 0;
 
 AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
 
@@ -43,6 +44,9 @@ void setup() {
   stepper.setAcceleration(acceleration);
   /* Setup endstop switch: */
   pinMode(pinEndstop, INPUT);
+  /* Setup pump: */
+  pinMode(pinPump, OUTPUT);
+  digitalWrite(pinPump, LOW);
   /* Report that we're ready: */
   Serial.print(F("INF READY POSNUM "));
   Serial.println(positionsNum);
@@ -63,10 +67,24 @@ void parseCommand(char *command) {
       Serial.print(F("ERR INVALIDPOS "));
       Serial.println(position);
     } else {
+      stepper.moveTo(positionMin + position * stepsPerPosition);
       Serial.print(F("CMD GOTO NONBLOCKING "));
       Serial.println(position);
-      stepper.moveTo(positionMin + position * stepsPerPosition);
       positionReached = false;
+    }
+  } else if (strstr(command, "PUMP ") == command) {
+    /* Activate the pump for a given time or deactivate it. */
+    int time = atoi(strchr(command, ' ') + 1);
+    if (time < 0 || time > pumpMaxTime) {
+      Serial.print(F("ERR INVALIDTIME "));
+      Serial.println(time);
+    } else {
+      if (time > 0) {
+        digitalWrite(pinPump, HIGH);
+      }
+      pumpFinished = millis() + time;
+      Serial.print(F("CMD PUMP NONBLOCKING "));
+      Serial.println(time);
     }
   } else {
     Serial.print(F("ERR UNKNOWNCMD "));
@@ -75,6 +93,12 @@ void parseCommand(char *command) {
 }
 
 void loop() {
+  /* Stop the pump if the time elapsed: */
+  if (pumpFinished > 0 && millis() >= pumpFinished) {
+    digitalWrite(pinPump, LOW);
+    pumpFinished = 0;
+    Serial.println(F("INF PUMPFINISHED"));
+  }
   /* If endstop switch is pressed, stop instantly: */
   if (digitalRead(pinEndstop) == LOW) {
     stepper.stop();
