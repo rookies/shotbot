@@ -10,12 +10,10 @@ def readline(ser, progressbar):
         line = ser.readline().decode('ascii').rstrip()
         if line:
             break
-        time.sleep(1)
+        time.sleep(.5)
         if progressbar:
             print('.', end='')
             sys.stdout.flush()
-    if progressbar:
-        print()
     return line
 
 def moveto(ser, position):
@@ -32,7 +30,7 @@ def moveto(ser, position):
         print()
         print(f'ERROR: Expected "INF POSREACHED", got "{line}".')
         sys.exit(2)
-    print('Done.')
+    print(' Done.')
 
 def home(ser):
     ser.write('HOME\n'.encode('ascii'))
@@ -48,7 +46,7 @@ def home(ser):
         print()
         print(f'ERROR: Expected "INF HOMED", got "{line}".')
         sys.exit(2)
-    print('Done.')
+    print(' Done.')
 
 
 with serial.Serial(sys.argv[1], 86400, timeout=0) as ser:
@@ -66,7 +64,7 @@ with serial.Serial(sys.argv[1], 86400, timeout=0) as ser:
         print()
         print(f'ERROR: Expected int, got "{line[17:]}".')
         sys.exit(2)
-    print(f'Ready, {posNum} positions.')
+    print(f' Ready, {posNum} positions.')
 
     ## Home:
     home(ser)
