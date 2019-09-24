@@ -1,9 +1,13 @@
 #!/usr/bin/python3
 import sys, serial, time
 
-if len(sys.argv) < 2:
-    print(f'Usage: {sys.argv[0]} serialport')
+if len(sys.argv) < 4:
+    print(f'Usage: {sys.argv[0]} serialport pumpTime count')
     sys.exit(1)
+pumpTime = int(sys.argv[2])
+count = int(sys.argv[3])
+assert(pumpTime >= 0)
+assert(count > 0)
 
 def readline(ser, progressbar):
     while True:
@@ -34,7 +38,7 @@ def moveto(ser, position):
 
 def home(ser):
     ser.write('HOME\n'.encode('ascii'))
-    print(f'Homing ', end='')
+    print('Homing ', end='')
     sys.stdout.flush()
     line = readline(ser, False)
     if line != 'CMD HOME BLOCKING':
@@ -45,6 +49,22 @@ def home(ser):
     if line != 'INF HOMED':
         print()
         print(f'ERROR: Expected "INF HOMED", got "{line}".')
+        sys.exit(2)
+    print(' Done.')
+
+def pump(ser, millis):
+    ser.write(f'PUMP {millis}\n'.encode('ascii'))
+    print(f'Pumping for {millis}ms ', end='')
+    sys.stdout.flush()
+    line = readline(ser, False)
+    if line != f'CMD PUMP NONBLOCKING {millis}':
+        print()
+        print(f'ERROR: Expected "CMD PUMP NONBLOCKING {millis}", got "{line}".')
+        sys.exit(2)
+    line = readline(ser, True)
+    if line != 'INF PUMPFINISHED':
+        print()
+        print(f'ERROR: Expected "INF PUMPFINISHED", got "{line}".')
         sys.exit(2)
     print(' Done.')
 
@@ -64,12 +84,19 @@ with serial.Serial(sys.argv[1], 86400, timeout=0) as ser:
         print()
         print(f'ERROR: Expected int, got "{line[17:]}".')
         sys.exit(2)
+    if count > posNum:
+        print()
+        print(f'ERROR: Only {posNum} positions available, not the {count} that you ordered.')
+        sys.exit(1)
     print(f' Ready, {posNum} positions.')
 
     ## Home:
     home(ser)
 
     ## Move to all positions and back to zero:
-    for p in range(1, posNum):
+    pump(ser, pumpTime)
+    for p in range(1, count):
         moveto(ser, p)
-    moveto(ser, 0)
+        pump(ser, pumpTime)
+    if count != 1:
+        moveto(ser, 0)
