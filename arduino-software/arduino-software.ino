@@ -1,4 +1,5 @@
 #include <AccelStepper.h>
+#include <Servo.h>
 #include "Config.hh"
 
 const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);
@@ -6,9 +7,10 @@ char command[commandLengthMax+1];
 uint8_t commandLength = 0;
 bool positionReached = true;
 bool endstopErrorPrinted = false;
-unsigned long pumpFinished = 0;
+unsigned long valveFinished = 0;
 
 AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
+Servo valveServo;
 
 void home(bool melody=false) {
   /* Run backwards until the endstop switch is pressed: */
@@ -47,6 +49,9 @@ void setup() {
   /* Setup pump: */
   pinMode(pinPump, OUTPUT);
   digitalWrite(pinPump, LOW);
+  /* Setup valve servo: */
+  valveServo.attach(pinValveServo);
+  valveServo.write(valveAngleClosed);
   /* Report that we're ready: */
   Serial.print(F("INF READY POSNUM "));
   Serial.println(positionsNum);
@@ -72,19 +77,32 @@ void parseCommand(char *command) {
       Serial.println(position);
       positionReached = false;
     }
-  } else if (strstr(command, "PUMP ") == command) {
-    /* Activate the pump for a given time or deactivate it. */
+  } else if (strstr(command, "VALVE ") == command) {
+    /* Open the valve for a given time or close it. */
     int time = atoi(strchr(command, ' ') + 1);
-    if (time < 0 || time > pumpMaxTime) {
+    if (time < 0 || time > valveMaxTimeOpen) {
       Serial.print(F("ERR INVALIDTIME "));
       Serial.println(time);
     } else {
       if (time > 0) {
-        digitalWrite(pinPump, HIGH);
+        valveServo.write(valveAngleOpen);
       }
-      pumpFinished = millis() + time;
-      Serial.print(F("CMD PUMP NONBLOCKING "));
+      valveFinished = millis() + time;
+      Serial.print(F("CMD VALVE NONBLOCKING "));
       Serial.println(time);
+    }
+  } else if (strstr(command, "PUMP ") == command) {
+    /* Start or stop the pump. */
+    int val = atoi(strchr(command, ' ') + 1);
+    if (val == 0) {
+      digitalWrite(pinPump, LOW);
+      Serial.println(F("CMD PUMP DONE 0"));
+    } else if (val == 1) {
+      digitalWrite(pinPump, HIGH);
+      Serial.println(F("CMD PUMP DONE 1"));
+    } else {
+      Serial.print(F("ERR INVALIDVAL "));
+      Serial.println(val);
     }
   } else {
     Serial.print(F("ERR UNKNOWNCMD "));
@@ -93,11 +111,11 @@ void parseCommand(char *command) {
 }
 
 void loop() {
-  /* Stop the pump if the time elapsed: */
-  if (pumpFinished > 0 && millis() >= pumpFinished) {
-    digitalWrite(pinPump, LOW);
-    pumpFinished = 0;
-    Serial.println(F("INF PUMPFINISHED"));
+  /* Close the valve if the time elapsed: */
+  if (valveFinished > 0 && millis() >= valveFinished) {
+    valveServo.write(valveAngleClosed);
+    valveFinished = 0;
+    Serial.println(F("INF VALVECLOSED"));
   }
   /* If endstop switch is pressed, stop instantly: */
   if (digitalRead(pinEndstop) == LOW) {

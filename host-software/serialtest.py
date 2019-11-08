@@ -2,11 +2,11 @@
 import sys, serial, time
 
 if len(sys.argv) < 4:
-    print(f'Usage: {sys.argv[0]} serialport pumpTime count')
+    print(f'Usage: {sys.argv[0]} serialport valveTime count')
     sys.exit(1)
-pumpTime = int(sys.argv[2])
+valveTime = int(sys.argv[2])
 count = int(sys.argv[3])
-assert(pumpTime >= 0)
+assert(valveTime >= 0)
 assert(count > 0)
 
 def readline(ser, progressbar):
@@ -52,19 +52,35 @@ def home(ser):
         sys.exit(2)
     print(' Done.')
 
-def pump(ser, millis):
-    ser.write(f'PUMP {millis}\n'.encode('ascii'))
-    print(f'Pumping for {millis}ms ', end='')
+def valve(ser, millis):
+    ser.write(f'VALVE {millis}\n'.encode('ascii'))
+    print(f'Opening valve for {millis}ms ', end='')
     sys.stdout.flush()
     line = readline(ser, False)
-    if line != f'CMD PUMP NONBLOCKING {millis}':
+    if line != f'CMD VALVE NONBLOCKING {millis}':
         print()
-        print(f'ERROR: Expected "CMD PUMP NONBLOCKING {millis}", got "{line}".')
+        print(f'ERROR: Expected "CMD VALVE NONBLOCKING {millis}", got "{line}".')
         sys.exit(2)
     line = readline(ser, True)
-    if line != 'INF PUMPFINISHED':
+    if line != 'INF VALVECLOSED':
         print()
-        print(f'ERROR: Expected "INF PUMPFINISHED", got "{line}".')
+        print(f'ERROR: Expected "INF VALVECLOSED", got "{line}".')
+        sys.exit(2)
+    print(' Done.')
+
+def pump(ser, enable):
+    if enable:
+        print(f'Starting pump ', end='')
+        value = 1
+    else:
+        print(f'Stopping pump ', end='')
+        value = 0
+    ser.write(f'PUMP {value}\n'.encode('ascii'))
+    sys.stdout.flush()
+    line = readline(ser, False)
+    if line != f'CMD PUMP DONE {value}':
+        print()
+        print(f'ERROR: Expected "CMD PUMP DONE {value}", got "{line}".')
         sys.exit(2)
     print(' Done.')
 
@@ -93,10 +109,16 @@ with serial.Serial(sys.argv[1], 86400, timeout=0) as ser:
     ## Home:
     home(ser)
 
-    ## Move to all positions and back to zero:
-    pump(ser, pumpTime)
-    for p in range(1, count):
-        moveto(ser, p)
-        pump(ser, pumpTime)
+    ## Move to all positions:
+    try:
+        pump(ser, True)
+        time.sleep(1)
+        valve(ser, valveTime)
+        for p in range(1, count):
+            moveto(ser, p)
+            valve(ser, valveTime)
+    finally:
+        pump(ser, False)
+    # ... and back to zero:
     if count != 1:
         moveto(ser, 0)
