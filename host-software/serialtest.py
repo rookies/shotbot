@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import sys, serial, time
+import sys, time
 import hwcontrol
 
 if len(sys.argv) < 4:
