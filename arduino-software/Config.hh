@@ -5,12 +5,14 @@ const long serialBaudrate = 86400;
 const uint8_t commandLengthMax = 20;
 
 /* Pins */
-const uint8_t pinStep = 4;
-const uint8_t pinDirection = 5;
-const uint8_t pinEnable = 6;
-const uint8_t pinEndstop = A0; /* low active */
-const uint8_t pinPump = A1;
-const uint8_t pinValveServo = 9;
+const uint8_t pinEndstop = 2; /* low active */
+const uint8_t pinStep = 3;
+const uint8_t pinDirection = 4;
+const uint8_t pinEnable = 5;
+const uint8_t pinSolenoidValve = 6; /* TODO */
+const uint8_t pinPump = 7;
+const uint8_t pinValveServo = 8;
+const uint8_t pinValveServoEnable = 9; /* TODO */
 
 /* Stepper */
 const float maxStepsPerSecond = 3200;

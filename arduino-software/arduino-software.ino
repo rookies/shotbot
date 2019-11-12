@@ -51,7 +51,12 @@ void setup() {
   digitalWrite(pinPump, LOW);
   /* Setup valve servo: */
   valveServo.attach(pinValveServo);
+  pinMode(pinValveServoEnable, OUTPUT);
+  digitalWrite(pinValveServoEnable, HIGH);
   valveServo.write(valveAngleClosed);
+  /* Setup solenoid valve: */
+  pinMode(pinSolenoidValve, OUTPUT);
+  digitalWrite(pinSolenoidValve, LOW);
   /* Report that we're ready: */
   Serial.print(F("INF READY POSNUM "));
   Serial.println(positionsNum);
@@ -96,6 +101,9 @@ void parseCommand(char *command) {
     int val = atoi(strchr(command, ' ') + 1);
     if (val == 0) {
       digitalWrite(pinPump, LOW);
+      digitalWrite(pinSolenoidValve, HIGH);
+      delay(1000); /* TODO: Make time configurable. */
+      digitalWrite(pinSolenoidValve, LOW);
       Serial.println(F("CMD PUMP DONE 0"));
     } else if (val == 1) {
       digitalWrite(pinPump, HIGH);

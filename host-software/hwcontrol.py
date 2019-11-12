@@ -94,7 +94,7 @@ class Serial(serial.Serial):
             print(f'Starting pump ', end='')
             value = 1
         else:
-            print(f'Stopping pump ', end='')
+            print(f'Stopping pump and releasing pressure ', end='')
             value = 0
         self.write(f'PUMP {value}\n'.encode('ascii'))
         sys.stdout.flush()
