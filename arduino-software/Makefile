@@ -1,5 +1,5 @@
 SKETCH    := arduino-software.ino
-LIBRARIES := AccelStepper
+LIBRARIES := AccelStepper Servo
 BAUDRATE  := 86400
 BOARD     ?= arduino:avr:nano:cpu=atmega328old
 ARDUINO   ?= arduino-cli
