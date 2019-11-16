@@ -8,12 +8,12 @@ char command[commandLengthMax+1];
 uint8_t commandLength = 0;
 bool positionReached = true;
 bool endstopErrorPrinted = false;
-unsigned long valveFinished = 0;
+
 
 AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
 Servo valveServo;
 TaskScheduler<3> taskScheduler;
-/* ^- TODO: Insert real number of tasks here. */
+
 
 void home(bool melody=false) {
   /* Run backwards until the endstop switch is pressed: */
@@ -38,28 +38,46 @@ void home(bool melody=false) {
   stepper.runToNewPosition(positionMin);
 }
 
+const size_t taskId_closeServoValve = 0;
+void closeServoValve() {
+  valveServo.write(valveAngleClosed);
+  Serial.println(F("INF VALVECLOSED"));
+  /* TODO: Trigger switching off the servo. */
+}
+
 void setup() {
   /* Setup serial port: */
   Serial.begin(serialBaudrate);
+
   /* Setup stepper motor: */
   stepper.setEnablePin(pinEnable);
   stepper.setPinsInverted(false, false, true);
   stepper.enableOutputs();
   stepper.setMaxSpeed(maxStepsPerSecond);
   stepper.setAcceleration(acceleration);
+
   /* Setup endstop switch: */
   pinMode(pinEndstop, INPUT);
+
   /* Setup pump: */
   pinMode(pinPump, OUTPUT);
   digitalWrite(pinPump, LOW);
+
   /* Setup valve servo: */
   valveServo.attach(pinValveServo);
   pinMode(pinValveServoEnable, OUTPUT);
   digitalWrite(pinValveServoEnable, HIGH);
   valveServo.write(valveAngleClosed);
+
   /* Setup solenoid valve: */
   pinMode(pinSolenoidValve, OUTPUT);
   digitalWrite(pinSolenoidValve, LOW);
+
+  /* Setup tasks: */
+  taskScheduler.setTask(taskId_closeServoValve, closeServoValve);
+  /* TODO: Switching off the servo. */
+  /* TODO: Closing the solenoid valve. */
+
   /* Report that we're ready: */
   Serial.print(F("INF READY POSNUM "));
   Serial.println(positionsNum);
@@ -93,9 +111,10 @@ void parseCommand(char *command) {
       Serial.println(time);
     } else {
       if (time > 0) {
+        /* TODO: Enable servo. */
         valveServo.write(valveAngleOpen);
       }
-      valveFinished = millis() + time;
+      taskScheduler.scheduleTask(taskId_closeServoValve, time);
       Serial.print(F("CMD VALVE NONBLOCKING "));
       Serial.println(time);
     }
@@ -122,12 +141,9 @@ void parseCommand(char *command) {
 }
 
 void loop() {
-  /* Close the valve if the time elapsed: */
-  if (valveFinished > 0 && millis() >= valveFinished) {
-    valveServo.write(valveAngleClosed);
-    valveFinished = 0;
-    Serial.println(F("INF VALVECLOSED"));
-  }
+  /* Run scheduled tasks: */
+  taskScheduler.run();
+
   /* If endstop switch is pressed, stop instantly: */
   if (digitalRead(pinEndstop) == LOW) {
     stepper.stop();
