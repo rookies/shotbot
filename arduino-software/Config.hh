@@ -9,10 +9,10 @@ const uint8_t pinEndstop = 2; /* low active */
 const uint8_t pinStep = 3;
 const uint8_t pinDirection = 4;
 const uint8_t pinEnable = 5;
-const uint8_t pinSolenoidValve = 6; /* TODO */
+const uint8_t pinSolenoidValve = 6;
 const uint8_t pinPump = 7;
 const uint8_t pinValveServo = 8;
-const uint8_t pinValveServoEnable = 9; /* TODO */
+const uint8_t pinValveServoEnable = 9;
 
 /* Stepper */
 const float maxStepsPerSecond = 3200;
