@@ -25,8 +25,10 @@ void home(bool melody=false) {
     stepper.runSpeed();
   }
   stepper.stop();
+
   /* Zero the position: */
   stepper.setCurrentPosition(0);
+
   /* Play a short melody to signal that we're ready: */
   if (melody) {
     tone(pinStep, 8372); // C
@@ -37,6 +39,7 @@ void home(bool melody=false) {
     delay(500);
     noTone(pinStep);
   }
+
   /* Go to minimal position: */
   stepper.runToNewPosition(positionMin);
 }
@@ -177,14 +180,16 @@ void loop() {
     Serial.println(F("INF ENDSTOPRELEASED"));
     endstopErrorPrinted = false;
   }
-  /* Check for new commands: */
+
+  /* Parse new commands: */
   commandReader.run();
 
-  /* Print a message if we arrived at our target: */
+  /* Print a message when we arrived at our target: */
   if (!positionReached && stepper.distanceToGo() == 0) {
     Serial.println(F("INF POSREACHED"));
     positionReached = true;
   }
-  /* Run the motor: */
+
+  /* Run the stepper motor: */
   stepper.run();
 }
