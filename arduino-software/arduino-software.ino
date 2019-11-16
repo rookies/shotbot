@@ -14,7 +14,7 @@ void parseCommand(char *);
 
 AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
 Servo valveServo;
-TaskScheduler<3> taskScheduler;
+TaskScheduler<4> taskScheduler;
 CommandReader<commandLengthMax> commandReader(parseCommand);
 
 
@@ -49,6 +49,7 @@ void home(bool melody=false) {
 const size_t taskId_closeServoValve = 0;
 const size_t taskId_switchOffValveServo = 1;
 const size_t taskId_closeSolenoidValve = 2;
+const size_t taskId_switchOffPump = 3;
 
 /* Tasks: */
 void closeServoValve() {
@@ -63,6 +64,12 @@ void switchOffValveServo() {
 }
 void closeSolenoidValve() {
   digitalWrite(pinSolenoidValve, LOW);
+  /* TODO: Add message? */
+}
+void switchOffPump() {
+  digitalWrite(pinPump, LOW);
+  digitalWrite(pinSolenoidValve, HIGH);
+  taskScheduler.scheduleTask(taskId_closeSolenoidValve, pressureReleaseTime);
   /* TODO: Add message? */
 }
 
@@ -100,6 +107,7 @@ void setup() {
   taskScheduler.setTask(taskId_closeServoValve, closeServoValve);
   taskScheduler.setTask(taskId_switchOffValveServo, switchOffValveServo);
   taskScheduler.setTask(taskId_closeSolenoidValve, closeSolenoidValve);
+  taskScheduler.setTask(taskId_switchOffPump, switchOffPump);
 
   /* Report that we're ready: */
   Serial.print(F("INF READY POSNUM "));
@@ -145,12 +153,18 @@ void parseCommand(char *command) {
     /* Start or stop the pump. */
     int val = atoi(strchr(command, ' ') + 1);
     if (val == 0) {
-      digitalWrite(pinPump, LOW);
-      digitalWrite(pinSolenoidValve, HIGH);
-      taskScheduler.scheduleTask(taskId_closeSolenoidValve, pressureReleaseTime);
+      switchOffPump();
+
+      /* Unschedule switching off the pump after pumpMaxTime: */
+      taskScheduler.unscheduleTask(taskId_switchOffPump);
+
       Serial.println(F("CMD PUMP DONE 0"));
     } else if (val == 1) {
       digitalWrite(pinPump, HIGH);
+
+      /* Schedule switching off the pump after pumpMaxTime: */
+      taskScheduler.scheduleTask(taskId_switchOffPump, pumpMaxTime);
+
       Serial.println(F("CMD PUMP DONE 1"));
     } else {
       Serial.print(F("ERR INVALIDVAL "));

@@ -22,6 +22,11 @@ class TaskScheduler {
       _enabled[idx] = true;
     }
 
+    void unscheduleTask(size_t idx) {
+      if (idx >= N) return;
+      _enabled[idx] = false;
+    }
+
     void run() {
       unsigned long now = millis();
 
