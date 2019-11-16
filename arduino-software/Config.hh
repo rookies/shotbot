@@ -2,7 +2,7 @@
 
 /* Serial console */
 const long serialBaudrate = 86400;
-const uint8_t commandLengthMax = 20;
+const size_t commandLengthMax = 20;
 
 /* Pins */
 const uint8_t pinEndstop = 2; /* low active */

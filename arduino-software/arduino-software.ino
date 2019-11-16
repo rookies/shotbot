@@ -2,17 +2,20 @@
 #include <Servo.h>
 #include "Config.hh"
 #include "TaskScheduler.hh"
+#include "CommandReader.hh"
 
 const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);
-char command[commandLengthMax+1];
-uint8_t commandLength = 0;
 bool positionReached = true;
 bool endstopErrorPrinted = false;
+
+
+void parseCommand(char *);
 
 
 AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
 Servo valveServo;
 TaskScheduler<3> taskScheduler;
+CommandReader<commandLengthMax> commandReader(parseCommand);
 
 
 void home(bool melody=false) {
@@ -175,19 +178,8 @@ void loop() {
     endstopErrorPrinted = false;
   }
   /* Check for new commands: */
-  while (Serial.available() > 0) {
-    char chr = Serial.read();
-    if (chr != '\n' && chr != '\r' && commandLength < commandLengthMax) {
-      /* Save received char in our buffer: */
-      command[commandLength++] = chr;
-    } else {
-      /* Command finished, add null byte and prepare for next one: */
-      command[commandLength] = '\0';
-      commandLength = 0;
-      /* ... and parse it: */
-      parseCommand(command);
-    }
-  }
+  commandReader.run();
+
   /* Print a message if we arrived at our target: */
   if (!positionReached && stepper.distanceToGo() == 0) {
     Serial.println(F("INF POSREACHED"));
