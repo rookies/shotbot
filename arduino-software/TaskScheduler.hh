@@ -27,7 +27,7 @@ class TaskScheduler {
 
       for (size_t i=0; i < N; ++i) {
         if (_enabled[i] && now >= _nextExecutions[i]) {
-          _tasks[i]();
+          (*_tasks[i])();
           _enabled[i] = false;
         }
       }
