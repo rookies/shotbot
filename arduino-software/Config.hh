@@ -31,3 +31,6 @@ const int valveMaxTimeOpen = 10000; /* ms */
 const uint8_t valveAngleClosed = 160;
 const uint8_t valveAngleOpen = 60;
 const int valveServoOffDelay = 1000; /* ms */
+
+/* Solenoid Valve */
+const int pressureReleaseTime = 1000; /* ms */

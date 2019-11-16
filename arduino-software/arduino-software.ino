@@ -38,9 +38,11 @@ void home(bool melody=false) {
   stepper.runToNewPosition(positionMin);
 }
 
+
 /* Task IDs: */
 const size_t taskId_closeServoValve = 0;
 const size_t taskId_switchOffValveServo = 1;
+const size_t taskId_closeSolenoidValve = 2;
 
 /* Tasks: */
 void closeServoValve() {
@@ -51,7 +53,13 @@ void closeServoValve() {
 }
 void switchOffValveServo() {
   digitalWrite(pinValveServoEnable, LOW);
+  /* TODO: Add message? */
 }
+void closeSolenoidValve() {
+  digitalWrite(pinSolenoidValve, LOW);
+  /* TODO: Add message? */
+}
+
 
 void setup() {
   /* Setup serial port: */
@@ -85,7 +93,7 @@ void setup() {
   /* Setup tasks: */
   taskScheduler.setTask(taskId_closeServoValve, closeServoValve);
   taskScheduler.setTask(taskId_switchOffValveServo, switchOffValveServo);
-  /* TODO: Closing the solenoid valve. */
+  taskScheduler.setTask(taskId_closeSolenoidValve, closeSolenoidValve);
 
   /* Report that we're ready: */
   Serial.print(F("INF READY POSNUM "));
@@ -133,8 +141,7 @@ void parseCommand(char *command) {
     if (val == 0) {
       digitalWrite(pinPump, LOW);
       digitalWrite(pinSolenoidValve, HIGH);
-      delay(1000); /* TODO: Make time configurable. */
-      digitalWrite(pinSolenoidValve, LOW);
+      taskScheduler.scheduleTask(taskId_closeSolenoidValve, pressureReleaseTime);
       Serial.println(F("CMD PUMP DONE 0"));
     } else if (val == 1) {
       digitalWrite(pinPump, HIGH);
