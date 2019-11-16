@@ -38,11 +38,19 @@ void home(bool melody=false) {
   stepper.runToNewPosition(positionMin);
 }
 
+/* Task IDs: */
 const size_t taskId_closeServoValve = 0;
+const size_t taskId_switchOffValveServo = 1;
+
+/* Tasks: */
 void closeServoValve() {
   valveServo.write(valveAngleClosed);
   Serial.println(F("INF VALVECLOSED"));
-  /* TODO: Trigger switching off the servo. */
+  /* Switch off servo after some delay: */
+  taskScheduler.scheduleTask(taskId_switchOffValveServo, valveServoOffDelay);
+}
+void switchOffValveServo() {
+  digitalWrite(pinValveServoEnable, LOW);
 }
 
 void setup() {
@@ -68,6 +76,7 @@ void setup() {
   pinMode(pinValveServoEnable, OUTPUT);
   digitalWrite(pinValveServoEnable, HIGH);
   valveServo.write(valveAngleClosed);
+  taskScheduler.scheduleTask(taskId_switchOffValveServo, valveServoOffDelay);
 
   /* Setup solenoid valve: */
   pinMode(pinSolenoidValve, OUTPUT);
@@ -75,7 +84,7 @@ void setup() {
 
   /* Setup tasks: */
   taskScheduler.setTask(taskId_closeServoValve, closeServoValve);
-  /* TODO: Switching off the servo. */
+  taskScheduler.setTask(taskId_switchOffValveServo, switchOffValveServo);
   /* TODO: Closing the solenoid valve. */
 
   /* Report that we're ready: */
@@ -111,7 +120,7 @@ void parseCommand(char *command) {
       Serial.println(time);
     } else {
       if (time > 0) {
-        /* TODO: Enable servo. */
+        digitalWrite(pinValveServoEnable, HIGH);
         valveServo.write(valveAngleOpen);
       }
       taskScheduler.scheduleTask(taskId_closeServoValve, time);
