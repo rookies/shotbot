@@ -1,6 +1,7 @@
 #include <AccelStepper.h>
 #include <Servo.h>
 #include "Config.hh"
+#include "TaskScheduler.hh"
 
 const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);
 char command[commandLengthMax+1];
@@ -11,6 +12,8 @@ unsigned long valveFinished = 0;
 
 AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
 Servo valveServo;
+TaskScheduler<3> taskScheduler;
+/* ^- TODO: Insert real number of tasks here. */
 
 void home(bool melody=false) {
   /* Run backwards until the endstop switch is pressed: */
