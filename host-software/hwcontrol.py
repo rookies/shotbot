@@ -187,29 +187,24 @@ class ShotBot(object):
         self._waitForState('POSITION', str(position))
         print('[hwcontrol] Moved to position %d' % position)
 
+    # TODO: Handle errors
     def valve(self, millis):
-        self.write(f'VALVE {millis}\n'.encode('ascii'))
         print(f'[hwcontrol] Opening valve for {millis}ms ...')
-        line, dur1 = self.readline()
-        if line != f'CMD VALVE NONBLOCKING {millis}':
-            print(f'ERROR: Expected "CMD VALVE NONBLOCKING {millis}", got "{line}".')
-            sys.exit(2)
-        line, dur2 = self.readline()
-        if line != 'INF VALVECLOSED':
-            print(f'ERROR: Expected "INF VALVECLOSED", got "{line}".')
-            sys.exit(2)
-        print('[hwcontrol] Opening valve done after %.1fs.' % (dur1 + dur2))
+        self._sendline('VALVE %d' % millis)
+        if millis != 0:
+            self._waitForState('VALVE', 'OPEN')
+        self._waitForState('VALVE', 'CLOSED')
+        print('[hwcontrol] Opening valve done.')
 
+    # TODO: Handle errors
     def pump(self, enable):
         if enable:
             print('[hwcontrol] Starting pump ...')
-            value = 1
+            self._sendline('PUMP 1')
+            self._waitForState('PUMP', 'ON')
+            print('[hwcontrol] Started pump.')
         else:
             print('[hwcontrol] Stopping pump and releasing pressure ...')
-            value = 0
-        self.write(f'PUMP {value}\n'.encode('ascii'))
-        line, dur = self.readline()
-        if line != f'CMD PUMP DONE {value}':
-            print(f'ERROR: Expected "CMD PUMP DONE {value}", got "{line}".')
-            sys.exit(2)
-        print('[hwcontrol] Switched pump in %.1fs.' % dur)
+            self._sendline('PUMP 0')
+            self._waitForState('PUMP', 'OFF')
+            print('[hwcontrol] Stopped pump.')
