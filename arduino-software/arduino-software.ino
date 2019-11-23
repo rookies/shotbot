@@ -262,7 +262,7 @@ void loop() {
   if (digitalRead(pinEndstop) == LOW) {
     stepper.stop();
     if (!endstopErrorPrinted) {
-      Serial.println(F("ERROR ENDSTOPUNEXPECTED"));
+      Serial.println(F("MSG ERROR ENDSTOPUNEXPECTED"));
       endstopErrorPrinted = true;
     }
     /* Suppress POSREACHED message: */
@@ -272,7 +272,7 @@ void loop() {
 
   /* If endstop is released, print a message once: */
   if (endstopErrorPrinted) {
-    Serial.println(F("INFO ENDSTOPRELEASED"));
+    Serial.println(F("MSG INFO ENDSTOPRELEASED"));
     endstopErrorPrinted = false;
   }
 

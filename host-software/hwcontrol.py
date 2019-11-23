@@ -1,27 +1,153 @@
-import sys, time, serial
+import sys, time, serial, enum
 
 # TODO: Remove calls to sys.exit
 # TODO: Use logger
-class Serial(serial.Serial):
-    def __init__(self, port, *args, **kwargs):
-        super().__init__(port, 86400, *args, timeout=0, **kwargs)
+# TODO: Allow registering good / bad responses and add callbacks?
 
-    def __enter__(self):
-        super().__enter__()
-        return self
+class MessageType(enum.Enum):
+    STATE = 1
+    READY = 2
+    CMD = 3
+    MSG = 4
 
-    def __exit__(self, *args):
-        super().__exit__(*args)
+class Line(object):
+    @staticmethod
+    def parse(line):
+        lineParts = line.upper().split(' ')
+
+        if lineParts[0] == 'STATE':
+            return StateLine.parse(lineParts[1:])
+        elif lineParts[0] == 'READY':
+            return ReadyLine.parse(lineParts[1:])
+        elif lineParts[0] == 'CMD':
+            return CmdLine.parse(lineParts[1:])
+        elif lineParts[0] == 'MSG':
+            return MsgLine.parse(lineParts[1:])
+        else:
+            print('Invalid line type')
+            return None
+
+class StateLine(Line):
+    @staticmethod
+    def parse(lineParts):
+        if len(lineParts) != 2:
+            print('Invalid number of parts')
+            return None
+
+        return StateLine(*lineParts)
+
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+    def __str__(self):
+        return 'StateLine: %s = %s' % (self.key, self.value)
+
+class ReadyLine(Line):
+    @staticmethod
+    def parse(lineParts):
+        if len(lineParts) != 2:
+            print('Invalid number of parts')
+            return None
+
+        if lineParts[0] != 'POSITIONS':
+            print('Invalid first part')
+            return None
+
+        try:
+            positions = int(lineParts[1])
+        except ValueError:
+            print('Invalid second part')
+            return None
+
+        return ReadyLine(positions)
+
+    def __init__(self, positions):
+        self.positions = positions
+
+    def __str__(self):
+        return 'ReadyLine: %d positions' % self.positions
+
+class CmdLine(Line):
+    @staticmethod
+    def parse(lineParts):
+        if len(lineParts) == 0:
+            print('Invalid number of parts')
+            return None
+        msg = ' '.join(lineParts[1:])
+
+        if lineParts[0] == 'OK':
+            return CmdLine(True, msg)
+        elif lineParts[0] == 'ERROR':
+            return CmdLine(False, msg)
+        else:
+            print('Invalid first part')
+            return None
+
+    def __init__(self, ok, message):
+        self.ok = ok
+        self.message = message
+
+    def __str__(self):
+        if self.ok:
+            return 'CmdLine: (OK) %s' % self.message
+        else:
+            return 'CmdLine: (ERROR) %s' % self.message
+
+class MsgLine(Line):
+    @staticmethod
+    def parse(lineParts):
+        if len(lineParts) < 2:
+            print('Invalid number of parts')
+            return None
+
+        msg = ' '.join(lineParts[1:])
+        return MsgLine(lineParts[0], msg)
+
+    def __init__(self, level, message):
+        self.level = level
+        self.message = message
+
+    def __str__(self):
+        return 'MsgLine: (%s) %s' % (self.level, self.message)
+
+class ShotBot(object):
+    def __init__(self, port):
+        # Create serial port:
+        self.serial = serial.Serial(port, 86400, timeout=0)
+
+    def sendline(self, line):
+        # Log it:
+        print('>>> %s' % line)
+
+        # Send it:
+        self.serial.write(('%s\n' % line).encode('ascii'))
 
     def readline(self):
-        start = time.monotonic()
         while True:
-            line = super().readline().decode('ascii').rstrip()
-            if line:
+            # Read line:
+            rawLine = self.serial.readline()
+            line = rawLine.decode('ascii').rstrip()
+            if not line:
+                continue
+
+            # Log it:
+            print('<<< %s' % line)
+
+            # Parse it:
+            parsedLine = Line.parse(line)
+            if parsedLine:
                 break
+
+            # Wait for another chance:
             time.sleep(.1)
-        duration = time.monotonic() - start
-        return (line, duration)
+
+        # Return it:
+        print(parsedLine)
+        return parsedLine
+
+    def ready(self):
+        pass
 
     def waitForReady(self):
         ## Wait for "INF READY POSNUM <N>" message:
