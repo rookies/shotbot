@@ -7,6 +7,7 @@
 const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);
 bool positionReached = true;
 bool endstopErrorPrinted = false;
+bool homed = false;
 
 
 void parseCommand(char *);
@@ -65,13 +66,15 @@ void pumpOn() {
   /* Schedule switching off the pump after pumpMaxTime: */
   taskScheduler.scheduleTask(taskId_switchOffPump, pumpMaxTime);
 }
-void pumpOff() {
+void pumpOff(bool releasePressure=true) {
   digitalWrite(pinPump, LOW);
   Serial.println(F("STATE PUMP OFF"));
 
   /* Release pressure: */
-  solenoidOpen();
-  taskScheduler.scheduleTask(taskId_closeSolenoidValve, pressureReleaseTime);
+  if (releasePressure) {
+    solenoidOpen();
+    taskScheduler.scheduleTask(taskId_closeSolenoidValve, pressureReleaseTime);
+  }
 
   /* Unschedule switching off the pump after pumpMaxTime: */
   taskScheduler.unscheduleTask(taskId_switchOffPump);
@@ -83,6 +86,10 @@ void stepperOn() {
 void stepperOff() {
   stepper.disableOutputs();
   Serial.println(F("STATE STEPPER OFF"));
+
+  /* Remember that we're not homed anymore: */
+  homed = false;
+  Serial.println(F("STATE HOMED FALSE"));
 }
 
 
@@ -102,7 +109,7 @@ void setup() {
 
   /* Setup pump: */
   pinMode(pinPump, OUTPUT);
-  pumpOff();
+  pumpOff(false);
 
   /* Setup valve servo: */
   valveServo.attach(pinValveServo);
@@ -118,6 +125,12 @@ void setup() {
   taskScheduler.setTask(taskId_switchOffValveServo, servoOff);
   taskScheduler.setTask(taskId_closeSolenoidValve, solenoidClose);
   taskScheduler.setTask(taskId_switchOffPump, pumpOff);
+
+  /* We're not homed yet: */
+  homed = false;
+  Serial.println(F("STATE HOMED FALSE"));
+  Serial.println(F("STATE TARGET -1"));
+  Serial.println(F("STATE TARGETREACHED FALSE"));
 
   /* Report that we're ready: */
   Serial.print(F("READY POSITIONS "));
@@ -142,8 +155,9 @@ void cmd_home(char *command) {
   /* Go to minimal position: */
   stepper.runToNewPosition(positionMin);
 
-  /* Inform that we finished: */
-  Serial.println(F("CMD FINISHED"));
+  /* Remember that we homed: */
+  homed = true;
+  Serial.println(F("STATE HOMED TRUE"));
 
   /* Suppress POSREACHED message: */
   positionReached = true;
@@ -151,6 +165,12 @@ void cmd_home(char *command) {
 
 
 void cmd_goto(char *command) {
+  /* Check if we're homed: */
+  if (!homed) {
+    Serial.println(F("CMD ERROR NOTHOMED"));
+    return;
+  }
+
   /* Extract position: */
   int position = atoi(strchr(command, ' ') + 1);
   if (position < 0 || position >= positionsNum) {
@@ -229,7 +249,7 @@ void parseCommand(char *command) {
     cmd_pump(command);
   } else {
     /* Unknown command. */
-    Serial.print(F("CMD ERROR UNKNOWNCOMMAND"));
+    Serial.println(F("CMD ERROR UNKNOWNCOMMAND"));
   }
 }
 

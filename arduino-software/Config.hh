@@ -23,7 +23,7 @@ const long positionMax = 29000;
 const uint8_t positionsNum = 7;
 
 /* Pump */
-const int pumpMaxTime = 120000; /* ms */
+const long pumpMaxTime = 120000; /* ms */
 
 /* Valve Servo */
 const int valveMaxTimeOpen = 10000; /* ms */
