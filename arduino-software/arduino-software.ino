@@ -53,6 +53,7 @@ const size_t taskId_switchOffPump = 3;
 
 /* Tasks: */
 void closeServoValve() {
+  digitalWrite(pinValveServoEnable, HIGH);
   valveServo.write(valveAngleClosed);
   Serial.println(F("INF VALVECLOSED"));
   /* Switch off servo after some delay: */
