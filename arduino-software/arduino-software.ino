@@ -5,7 +5,8 @@
 #include "CommandReader.hh"
 
 const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);
-bool positionReached = true;
+uint8_t targetPosition;
+bool targetPositionReached = true;
 bool endstopErrorPrinted = false;
 bool homed = false;
 
@@ -130,7 +131,7 @@ void setup() {
   homed = false;
   Serial.println(F("STATE HOMED FALSE"));
   Serial.println(F("STATE TARGET -1"));
-  Serial.println(F("STATE TARGETREACHED FALSE"));
+  Serial.println(F("STATE POSITION -1"));
 
   /* Report that we're ready: */
   Serial.print(F("READY POSITIONS "));
@@ -159,8 +160,12 @@ void cmd_home(char *command) {
   homed = true;
   Serial.println(F("STATE HOMED TRUE"));
 
+  /* Remember the current position: */
+  targetPosition = 0;
+  Serial.println(F("STATE POSITION 0"));
+
   /* Suppress POSREACHED message: */
-  positionReached = true;
+  targetPositionReached = true;
 }
 
 
@@ -182,13 +187,13 @@ void cmd_goto(char *command) {
   Serial.println(F("CMD OK"));
 
   /* Set the new target: */
+  targetPosition = position;
   stepper.moveTo(positionMin + position * stepsPerPosition);
   Serial.print(F("STATE TARGET "));
   Serial.println(position);
 
   /* Set positionReached: */
-  positionReached = false;
-  Serial.println(F("STATE TARGETREACHED FALSE"));
+  targetPositionReached = false;
 }
 
 
@@ -266,7 +271,7 @@ void loop() {
       endstopErrorPrinted = true;
     }
     /* Suppress POSREACHED message: */
-    positionReached = true;
+    targetPositionReached = true;
     return;
   }
 
@@ -280,9 +285,10 @@ void loop() {
   commandReader.run();
 
   /* Print a message when we arrived at our target: */
-  if (!positionReached && stepper.distanceToGo() == 0) {
-    Serial.println(F("STATE TARGETREACHED TRUE"));
-    positionReached = true;
+  if (!targetPositionReached && stepper.distanceToGo() == 0) {
+    Serial.print(F("STATE POSITION "));
+    Serial.println(targetPosition);
+    targetPositionReached = true;
   }
 
   /* Run the stepper motor: */

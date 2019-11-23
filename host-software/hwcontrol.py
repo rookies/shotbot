@@ -114,19 +114,23 @@ class MsgLine(Line):
 class ShotBot(object):
     def __init__(self, port):
         # Create serial port:
-        self.serial = serial.Serial(port, 86400, timeout=0)
+        self._serial = serial.Serial(port, 86400, timeout=1)
 
-    def sendline(self, line):
+        # Create hardware state:
+        self._state = {}
+
+    def _sendline(self, line):
         # Log it:
         print('>>> %s' % line)
 
         # Send it:
-        self.serial.write(('%s\n' % line).encode('ascii'))
+        self._serial.write(('%s\n' % line).encode('ascii'))
 
-    def readline(self):
+    # TODO: Add timeout
+    def _readline(self):
         while True:
             # Read line:
-            rawLine = self.serial.readline()
+            rawLine = self._serial.readline()
             line = rawLine.decode('ascii').rstrip()
             if not line:
                 continue
@@ -142,54 +146,46 @@ class ShotBot(object):
             # Wait for another chance:
             time.sleep(.1)
 
+        # If it's a state line, save it to our state:
+        if isinstance(parsedLine, StateLine):
+            self._state[parsedLine.key] = parsedLine.value
+            print('New state:', self._state)
+
+        # If it's a message line, print it to the console:
+        if isinstance(parsedLine, MsgLine):
+            print(parsedLine)
+
         # Return it:
-        print(parsedLine)
         return parsedLine
 
+    # TODO: Add timeout
+    def _waitForState(self, key, value):
+        while True:
+            self._readline()
+            if (key in self._state) and (self._state[key] == value):
+                return True
+
     def ready(self):
-        pass
-
-    def waitForReady(self):
-        ## Wait for "INF READY POSNUM <N>" message:
         print('[hwcontrol] Waiting for the Arduino to be ready ...')
-        line, dur = self.readline()
-        if line[:17] != 'INF READY POSNUM ':
-            print(f'ERROR: Expected "INF READY POSNUM <N>", got "{line}".')
-            sys.exit(2)
-        try:
-            posNum = int(line[17:])
-        except ValueError:
-            print(f'ERROR: Expected int, got "{line[17:]}".')
-            sys.exit(2)
-        print('[hwcontrol] Ready after %.1fs, %d positions.' % (dur, posNum))
+        while True:
+            line = self._readline()
+            if isinstance(line, ReadyLine):
+                print('[hwcontrol] Ready, %d positions.' % line.positions)
+                return line.positions
 
-        return posNum
-
-    def moveto(self, position):
-        self.write(f'GOTO {position}\n'.encode('ascii'))
-        print(f'[hwcontrol] Moving to position {position} ...')
-        line, dur1 = self.readline()
-        if line != f'CMD GOTO NONBLOCKING {position}':
-            print(f'ERROR: Expected "CMD GOTO NONBLOCKING {position}", got "{line}".')
-            sys.exit(2)
-        line, dur2 = self.readline()
-        if line != 'INF POSREACHED':
-            print(f'ERROR: Expected "INF POSREACHED", got "{line}".')
-            sys.exit(2)
-        print('[hwcontrol] Moved to position %d in %.1fs.' % (position, dur1 + dur2))
-
+    # TODO: Handle errors
     def home(self):
-        self.write('HOME\n'.encode('ascii'))
         print('[hwcontrol] Homing ...')
-        line, dur1 = self.readline()
-        if line != 'CMD HOME BLOCKING':
-            print(f'ERROR: Expected "CMD HOME BLOCKING", got "{line}".')
-            sys.exit(2)
-        line, dur2 = self.readline()
-        if line != 'INF HOMED':
-            print(f'ERROR: Expected "INF HOMED", got "{line}".')
-            sys.exit(2)
-        print('[hwcontrol] Homed in %.1fs.' % (dur1 + dur2))
+        self._sendline('HOME')
+        self._waitForState('HOMED', 'TRUE')
+        print('[hwcontrol] Homed.')
+
+    # TODO: Handle errors
+    def goto(self, position):
+        print('[hwcontrol] Moving to position %d ...' % position)
+        self._sendline('GOTO %d' % position)
+        self._waitForState('POSITION', str(position))
+        print('[hwcontrol] Moved to position %d' % position)
 
     def valve(self, millis):
         self.write(f'VALVE {millis}\n'.encode('ascii'))
