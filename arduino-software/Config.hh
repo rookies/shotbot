@@ -19,8 +19,8 @@ const float maxStepsPerSecond = 3200;
 const float homeStepsPerSecond = 1000;
 const float acceleration = 1000;
 const long positionMin = 400;
-const long positionMax = 29000;
-const uint8_t positionsNum = 7;
+const long positionMax = 26000;
+const uint8_t positionsNum = 6;
 
 /* Pump */
 const long pumpMaxTime = 120000; /* ms */
