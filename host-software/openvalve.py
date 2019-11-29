@@ -7,9 +7,6 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 
-with hwcontrol.Serial(sys.argv[1]) as ser:
-    ## Wait for Arduino to be ready:
-    ser.waitForReady()
-
-    ## Open valve:
-    ser.valve(10000)
+bot = hwcontrol.ShotBot(sys.argv[1])
+bot.ready()
+bot.valve(10000)
