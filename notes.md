@@ -1,6 +1,15 @@
 ShotBot Notes
 =============
 
+## Problems
+* hose sticks to itself inside and plugs up
+* hose slides down a bit each time the valve is opened
+* hose shifts to the front sometimes and leaks
+
+## Ideas
+* counter or level meter which reports via Telegram when the tank
+  is getting empty
+
 ## Pumping system
 * Experiment 2019-11-08
   * peristaltic valve works great
