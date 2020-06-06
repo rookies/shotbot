@@ -1,0 +1,71 @@
+[hwcontrol] Waiting for the Arduino to be ready ...
+<<< STATE STEPPER ON
+New state: {'STEPPER': 'ON'}
+<<< STATE PUMP OFF
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF'}
+<<< STATE SERVO ON
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'ON'}
+<<< STATE VALVE CLOSED
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'ON', 'VALVE': 'CLOSED'}
+<<< STATE SOLENOID CLOSED
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'ON', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED'}
+<<< STATE HOMED FALSE
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'ON', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'FALSE'}
+<<< STATE TARGET -1
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'ON', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'FALSE', 'TARGET': '-1'}
+<<< STATE POSITION -1
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'ON', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'FALSE', 'TARGET': '-1', 'POSITION': '-1'}
+<<< READY POSITIONS 7
+[hwcontrol] Ready, 7 positions.
+[hwcontrol] Homing ...
+>>> HOME
+<<< CMD OK BLOCKING
+<<< STATE HOMED TRUE
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'ON', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '-1', 'POSITION': '-1'}
+[hwcontrol] Homed.
+[hwcontrol] Moving to position 1 ...
+>>> GOTO 1
+<<< STATE POSITION 0
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'ON', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '-1', 'POSITION': '0'}
+<<< STATE SERVO OFF
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'OFF', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '-1', 'POSITION': '0'}
+<<< CMD OK
+<<< STATE TARGET 1
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'OFF', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '1', 'POSITION': '0'}
+<<< STATE POSITION 1
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'OFF', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '1', 'POSITION': '1'}
+[hwcontrol] Moved to position 1
+[hwcontrol] Moving to position 0 ...
+>>> GOTO 0
+<<< CMD OK
+<<< STATE TARGET 0
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'OFF', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '0', 'POSITION': '1'}
+<<< STATE POSITION 0
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'OFF', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '0', 'POSITION': '0'}
+[hwcontrol] Moved to position 0
+[hwcontrol] Starting pump ...
+>>> PUMP 1
+<<< CMD OK
+<<< STATE PUMP ON
+New state: {'STEPPER': 'ON', 'PUMP': 'ON', 'SERVO': 'OFF', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '0', 'POSITION': '0'}
+[hwcontrol] Started pump.
+[hwcontrol] Opening valve for 2000ms ...
+>>> VALVE 2000
+<<< CMD OK
+<<< STATE SERVO ON
+New state: {'STEPPER': 'ON', 'PUMP': 'ON', 'SERVO': 'ON', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '0', 'POSITION': '0'}
+<<< STATE VALVE OPEN
+New state: {'STEPPER': 'ON', 'PUMP': 'ON', 'SERVO': 'ON', 'VALVE': 'OPEN', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '0', 'POSITION': '0'}
+<<< STATE SERVO OFF
+New state: {'STEPPER': 'ON', 'PUMP': 'ON', 'SERVO': 'OFF', 'VALVE': 'OPEN', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '0', 'POSITION': '0'}
+<<< STATE SERVO ON
+New state: {'STEPPER': 'ON', 'PUMP': 'ON', 'SERVO': 'ON', 'VALVE': 'OPEN', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '0', 'POSITION': '0'}
+<<< STATE VALVE CLOSED
+New state: {'STEPPER': 'ON', 'PUMP': 'ON', 'SERVO': 'ON', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '0', 'POSITION': '0'}
+[hwcontrol] Opening valve done.
+[hwcontrol] Stopping pump and releasing pressure ...
+>>> PUMP 0
+<<< CMD OK
+<<< STATE PUMP OFF
+New state: {'STEPPER': 'ON', 'PUMP': 'OFF', 'SERVO': 'ON', 'VALVE': 'CLOSED', 'SOLENOID': 'CLOSED', 'HOMED': 'TRUE', 'TARGET': '0', 'POSITION': '0'}
+[hwcontrol] Stopped pump.
