@@ -4,7 +4,8 @@ import speech_recognition as sr
 
 def callback(recognizer, audio):
     try:
-        print(recognizer.recognize_sphinx(audio, grammar=os.path.join(os.path.dirname(__file__), 'grammar/command.gram')))
+        print(recognizer.recognize_google(audio, language='en-US', show_all=True))
+        #print(recognizer.recognize_sphinx(audio, grammar=os.path.join(os.path.dirname(__file__), 'grammar/command.gram')))
     except sr.UnknownValueError:
         print('Error: could not understand audio')
     except sr.RequestError as e:
