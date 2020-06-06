@@ -36,7 +36,7 @@ def main():
     # Move to all positions:
     try:
         bot.pump(True)
-        time.sleep(1)
+        time.sleep(2)
         # ^- TODO: Consume new messages while sleeping.
         bot.valve(valveTime)
         for p in range(1, count):

@@ -6,7 +6,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
 
-valveTime = 6000
+valveTime = 4000
 
 
 class ShotBotApp(Gtk.Application):
