@@ -1,5 +1,5 @@
 #include <AccelStepper.h>
-#include <Servo.h>
+#include <Adafruit_NeoPixel.h>
 #include "Config.hh"
 #include "TaskScheduler.hh"
 #include "CommandReader.hh"
@@ -23,6 +23,7 @@ SelectorKnob countSelector(pinCountSelector, positionsNum, selectorMaxValue,
                            selectorHysteresis);
 SelectorKnob pumpSelector(pinPumpSelector, pumpsNum, selectorMaxValue,
                           selectorHysteresis);
+Adafruit_NeoPixel countLEDs(countLEDsNum, pinCountLEDs, NEO_KHZ800 + NEO_GRB);
 
 
 /* Task IDs: */
@@ -92,6 +93,10 @@ void setup() {
     pumpOff();
   }
   currentlyActivePump = -1;
+
+  /* Setup LEDs: */
+  countLEDs.begin();
+  countLEDs.show();
 
   /* Setup tasks: */
   taskScheduler.setTask(taskId_switchOffPump, pumpOff);
@@ -209,10 +214,15 @@ void loop() {
   /* Run scheduled tasks: */
   taskScheduler.run();
 
+  /* Run LEDs: */
+  countLEDs.show();
+
   /* TODO */
   if (countSelector.run()) {
     Serial.print(F("Count: "));
     Serial.println(countSelector.get());
+    countLEDs.clear();
+    countLEDs.fill(countLEDs.Color(0, 255, 0), 0, countSelector.get() + 1);
   }
   if (pumpSelector.run()) {
     Serial.print(F("Pump: "));

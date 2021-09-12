@@ -4,9 +4,11 @@
 const long serialBaudrate = 38400;
 const size_t commandLengthMax = 20;
 
-/* Number of positions and pumps */
+/* Number of positions, pumps, and LEDs */
 const uint8_t positionsNum = 6;
 const uint8_t pumpsNum = 2;
+const uint8_t countLEDsNum = 8;
+/* TODO: Check that positionsNum <= countLEDsNum */
 
 /* Pins */
 const uint8_t pinEndstop = 2; /* low active */
@@ -19,6 +21,8 @@ const uint8_t pinPumps[] = {
 };
 const uint8_t pinCountSelector = A0;
 const uint8_t pinPumpSelector = A1;
+const uint8_t pinTimeSelector = A2; /* TODO */
+const uint8_t pinCountLEDs = 8;
 
 /* Stepper */
 const float maxStepsPerSecond = 3200;
