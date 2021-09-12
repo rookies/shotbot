@@ -6,6 +6,7 @@
 
 const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);
 uint8_t targetPosition;
+uint8_t currentlyActivePump = -1;
 bool targetPositionReached = true;
 bool endstopErrorPrinted = false;
 bool homed = false;
@@ -15,67 +16,38 @@ void parseCommand(char *);
 
 
 AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
-Servo valveServo;
-TaskScheduler<4> taskScheduler;
+TaskScheduler<1> taskScheduler;
 CommandReader<commandLengthMax> commandReader(parseCommand);
 
 
 /* Task IDs: */
-const size_t taskId_closeServoValve = 0;
-const size_t taskId_switchOffValveServo = 1;
-const size_t taskId_closeSolenoidValve = 2;
-const size_t taskId_switchOffPump = 3;
+const size_t taskId_switchOffPump = 0;
 
 
 /* HW Control: */
-void servoOn() {
-  digitalWrite(pinValveServoEnable, HIGH);
-  Serial.println(F("STATE SERVO ON"));
-}
-void servoOff() {
-  digitalWrite(pinValveServoEnable, LOW);
-  Serial.println(F("STATE SERVO OFF"));
-}
-void solenoidOpen() {
-  digitalWrite(pinSolenoidValve, HIGH);
-  Serial.println(F("STATE SOLENOID OPEN"));
-}
-void solenoidClose() {
-  digitalWrite(pinSolenoidValve, LOW);
-  Serial.println(F("STATE SOLENOID CLOSED"));
-}
-void valveOpen() {
-  servoOn();
-  valveServo.write(valveAngleOpen);
-  Serial.println(F("STATE VALVE OPEN"));
+void pumpOn(uint8_t i, long duration) {
+  if (i >= pumpsNum) return;
 
-  /* Switch off servo after some delay: */
-  taskScheduler.scheduleTask(taskId_switchOffValveServo, valveServoOffDelay);
-}
-void valveClose() {
-  servoOn();
-  valveServo.write(valveAngleClosed);
-  Serial.println(F("STATE VALVE CLOSED"));
+  if (duration <= 0 || duration > pumpMaxTime) {
+    duration = pumpMaxTime;
+  }
 
-  /* Switch off servo after some delay: */
-  taskScheduler.scheduleTask(taskId_switchOffValveServo, valveServoOffDelay);
-}
-void pumpOn() {
-  digitalWrite(pinPump, HIGH);
-  Serial.println(F("STATE PUMP ON"));
+  digitalWrite(pinPumps[i], HIGH);
+  Serial.print(F("STATE PUMP ON "));
+  Serial.print(i);
+  Serial.print(F(" "));
+  Serial.println(duration);
 
   /* Schedule switching off the pump after pumpMaxTime: */
-  taskScheduler.scheduleTask(taskId_switchOffPump, pumpMaxTime);
+  currentlyActivePump = i;
+  taskScheduler.scheduleTask(taskId_switchOffPump, duration);
 }
-void pumpOff(bool releasePressure=true) {
-  digitalWrite(pinPump, LOW);
-  Serial.println(F("STATE PUMP OFF"));
+void pumpOff() {
+  if (currentlyActivePump >= pumpsNum) return;
 
-  /* Release pressure: */
-  if (releasePressure) {
-    solenoidOpen();
-    taskScheduler.scheduleTask(taskId_closeSolenoidValve, pressureReleaseTime);
-  }
+  digitalWrite(pinPumps[currentlyActivePump], LOW);
+  Serial.print(F("STATE PUMP OFF "));
+  Serial.println(currentlyActivePump);
 
   /* Unschedule switching off the pump after pumpMaxTime: */
   taskScheduler.unscheduleTask(taskId_switchOffPump);
@@ -108,23 +80,15 @@ void setup() {
   /* Setup endstop switch: */
   pinMode(pinEndstop, INPUT);
 
-  /* Setup pump: */
-  pinMode(pinPump, OUTPUT);
-  pumpOff(false);
-
-  /* Setup valve servo: */
-  valveServo.attach(pinValveServo);
-  pinMode(pinValveServoEnable, OUTPUT);
-  valveClose();
-
-  /* Setup solenoid valve: */
-  pinMode(pinSolenoidValve, OUTPUT);
-  solenoidClose();
+  /* Setup pumps: */
+  for (uint8_t i=0; i < pumpsNum; i++) {
+    pinMode(pinPumps[i], OUTPUT);
+    currentlyActivePump = i;
+    pumpOff();
+  }
+  currentlyActivePump = -1;
 
   /* Setup tasks: */
-  taskScheduler.setTask(taskId_closeServoValve, valveClose);
-  taskScheduler.setTask(taskId_switchOffValveServo, servoOff);
-  taskScheduler.setTask(taskId_closeSolenoidValve, solenoidClose);
   taskScheduler.setTask(taskId_switchOffPump, pumpOff);
 
   /* We're not homed yet: */
@@ -135,7 +99,9 @@ void setup() {
 
   /* Report that we're ready: */
   Serial.print(F("READY POSITIONS "));
-  Serial.println(positionsNum);
+  Serial.print(positionsNum);
+  Serial.print(F(" PUMPS "));
+  Serial.println(pumpsNum);
 }
 
 
@@ -197,32 +163,10 @@ void cmd_goto(char *command) {
 }
 
 
-void cmd_valve(char *command) {
-  /* Extract time: */
-  int time = atoi(strchr(command, ' ') + 1);
-  if (time < 0 || time > valveMaxTimeOpen) {
-    Serial.println(F("CMD ERROR INVALIDTIME"));
-    return;
-  }
-
-  /* Acknowledge command: */
-  Serial.println(F("CMD OK"));
-
-  /* Open or close the valve: */
-  if (time > 0) {
-    valveOpen();
-    /* Schedule closing the valve: */
-    taskScheduler.scheduleTask(taskId_closeServoValve, time);
-  } else {
-    valveClose();
-  }
-}
-
-
 void cmd_pump(char *command) {
   /* Extract value: */
   int val = atoi(strchr(command, ' ') + 1);
-  if (val != 0 && val != 1) {
+  if (val < 0 || val >= pumpsNum) {
     Serial.println(F("CMD ERROR INVALIDVALUE"));
     return;
   }
@@ -233,8 +177,8 @@ void cmd_pump(char *command) {
   /* Switch pump: */
   if (val == 0) {
     pumpOff();
-  } else if (val == 1) {
-    pumpOn();
+  } else {
+    pumpOn(val, 0);
   }
 }
 
@@ -246,9 +190,6 @@ void parseCommand(char *command) {
   } else if (strstr(command, "GOTO ") == command) {
     /* Go to given position. */
     cmd_goto(command);
-  } else if (strstr(command, "VALVE ") == command) {
-    /* Open the valve for a given time or close it. */
-    cmd_valve(command);
   } else if (strstr(command, "PUMP ") == command) {
     /* Start or stop the pump. */
     cmd_pump(command);
