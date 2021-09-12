@@ -4,6 +4,7 @@
 #include "TaskScheduler.hh"
 #include "CommandReader.hh"
 #include "SelectorKnob.hh"
+#include "DebouncedSwitch.hh"
 
 const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);
 uint8_t targetPosition;
@@ -16,14 +17,22 @@ bool homed = false;
 void parseCommand(char *);
 
 
-AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
-TaskScheduler<1> taskScheduler;
-CommandReader<commandLengthMax> commandReader(parseCommand);
+/* Inputs: */
 SelectorKnob countSelector(pinCountSelector, positionsNum, selectorMaxValue,
                            selectorHysteresis);
 SelectorKnob pumpSelector(pinPumpSelector, pumpsNum, selectorMaxValue,
                           selectorHysteresis);
+DebouncedSwitch startButton(pinStartButton, true, 100);
+
+
+/* Outputs: */
+AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
 Adafruit_NeoPixel countLEDs(countLEDsNum, pinCountLEDs, NEO_KHZ800 + NEO_GRB);
+
+
+/* Utilities: */
+TaskScheduler<1> taskScheduler;
+CommandReader<commandLengthMax> commandReader(parseCommand);
 
 
 /* Task IDs: */
@@ -209,6 +218,7 @@ void parseCommand(char *command) {
   }
 }
 
+int lastButtonValue = LOW; /* TODO: Remove this. */
 
 void loop() {
   /* Run scheduled tasks: */
@@ -216,6 +226,14 @@ void loop() {
 
   /* Run LEDs: */
   countLEDs.show();
+
+  /* TODO */
+  int buttonValue = startButton.get();
+  if (buttonValue != lastButtonValue) {
+    Serial.print(F("Button: "));
+    Serial.println(buttonValue);
+    lastButtonValue = buttonValue;
+  }
 
   /* TODO */
   if (countSelector.run()) {

@@ -25,6 +25,7 @@ const uint8_t pinCountSelector = A0;
 const uint8_t pinPumpSelector = A1;
 const uint8_t pinTimeSelector = A2; /* TODO */
 const uint8_t pinCountLEDs = 8;
+const uint8_t pinStartButton = 9;
 
 /* Stepper */
 const float maxStepsPerSecond = 3200;
