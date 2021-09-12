@@ -222,7 +222,7 @@ void loop() {
     Serial.print(F("Count: "));
     Serial.println(countSelector.get());
     countLEDs.clear();
-    countLEDs.fill(countLEDs.Color(0, 255, 0), 0, countSelector.get() + 1);
+    countLEDs.fill(countLEDsColor, 0, countSelector.get() + 1);
   }
   if (pumpSelector.run()) {
     Serial.print(F("Pump: "));

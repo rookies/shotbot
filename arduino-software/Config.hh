@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Adafruit_NeoPixel.h>
+
 /* Serial console */
 const long serialBaudrate = 38400;
 const size_t commandLengthMax = 20;
@@ -37,3 +39,6 @@ const long pumpMaxTime = 120000; /* ms */
 /* Selector knobs */
 const int selectorMaxValue = 1023;
 const int selectorHysteresis = 10;
+
+/* LEDs */
+const auto countLEDsColor = Adafruit_NeoPixel::Color(0, 20, 0);
