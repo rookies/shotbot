@@ -3,6 +3,7 @@
 #include "Config.hh"
 #include "TaskScheduler.hh"
 #include "CommandReader.hh"
+#include "SelectorKnob.hh"
 
 const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);
 uint8_t targetPosition;
@@ -18,6 +19,10 @@ void parseCommand(char *);
 AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
 TaskScheduler<1> taskScheduler;
 CommandReader<commandLengthMax> commandReader(parseCommand);
+SelectorKnob countSelector(pinCountSelector, positionsNum, selectorMaxValue,
+                           selectorHysteresis);
+SelectorKnob pumpSelector(pinPumpSelector, pumpsNum, selectorMaxValue,
+                          selectorHysteresis);
 
 
 /* Task IDs: */
@@ -203,6 +208,16 @@ void parseCommand(char *command) {
 void loop() {
   /* Run scheduled tasks: */
   taskScheduler.run();
+
+  /* TODO */
+  if (countSelector.run()) {
+    Serial.print(F("Count: "));
+    Serial.println(countSelector.get());
+  }
+  if (pumpSelector.run()) {
+    Serial.print(F("Pump: "));
+    Serial.println(pumpSelector.get());
+  }
 
   /* If endstop switch is pressed, stop instantly: */
   if (digitalRead(pinEndstop) == LOW) {

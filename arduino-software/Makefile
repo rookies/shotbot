@@ -1,6 +1,6 @@
 SKETCH    := arduino-software.ino
 LIBRARIES := AccelStepper Servo
-BAUDRATE  := 86400
+BAUDRATE  := 38400
 BOARD     ?= arduino:avr:nano:cpu=atmega328old
 ARDUINO   ?= arduino-cli
 PICOCOM   ?= picocom
