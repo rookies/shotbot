@@ -25,6 +25,7 @@ const uint8_t pinCountSelector = A0;
 const uint8_t pinPumpSelector = A1;
 const uint8_t pinTimeSelector = A2; /* TODO */
 const uint8_t pinCountLEDs = 8;
+const uint8_t pinPumpLEDs = 10;
 const uint8_t pinStartButton = 9;
 
 /* Stepper */
@@ -43,3 +44,4 @@ const int selectorHysteresis = 10;
 
 /* LEDs */
 const auto countLEDsColor = Adafruit_NeoPixel::Color(0, 20, 0);
+const auto pumpLEDsColor = Adafruit_NeoPixel::Color(255, 255, 255);

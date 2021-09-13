@@ -28,6 +28,7 @@ DebouncedSwitch startButton(pinStartButton, true, 100);
 /* Outputs: */
 AccelStepper stepper(AccelStepper::DRIVER, pinStep, pinDirection);
 Adafruit_NeoPixel countLEDs(countLEDsNum, pinCountLEDs, NEO_KHZ800 + NEO_GRB);
+Adafruit_NeoPixel pumpLEDs(pumpsNum, pinPumpLEDs, NEO_KHZ800 + NEO_GRB);
 
 
 /* Utilities: */
@@ -105,7 +106,7 @@ void setup() {
 
   /* Setup LEDs: */
   countLEDs.begin();
-  countLEDs.show();
+  pumpLEDs.begin();
 
   /* Setup tasks: */
   taskScheduler.setTask(taskId_switchOffPump, pumpOff);
@@ -226,6 +227,7 @@ void loop() {
 
   /* Run LEDs: */
   countLEDs.show();
+  pumpLEDs.show();
 
   /* TODO */
   int buttonValue = startButton.get();
@@ -245,6 +247,8 @@ void loop() {
   if (pumpSelector.run()) {
     Serial.print(F("Pump: "));
     Serial.println(pumpSelector.get());
+    pumpLEDs.clear();
+    pumpLEDs.setPixelColor(pumpSelector.get(), pumpLEDsColor);
   }
 
   /* If endstop switch is pressed, stop instantly: */
