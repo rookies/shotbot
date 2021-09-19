@@ -30,19 +30,10 @@ ServingStateMachine servingMachine;
 
 
 void setup() {
-  /* Setup serial port: */
+  /* Setup hardware: */
   Serial.begin(serialBaudrate);
-
-  /* Setup stepper motor: */
   Stepper::getInstance(); /* TODO: Prevent this from being optimized away? */
-
-  /* Setup endstop switch: */
-  pinMode(pinEndstop, INPUT);
-
-  /* Setup pumps: */
   Pump::getInstance(); /* TODO: Prevent this from being optimized away? */
-
-  /* Setup LEDs: */
   countLEDs.begin();
   pumpLEDs.begin();
 
@@ -53,56 +44,50 @@ void setup() {
 }
 
 
-void cmd_pump(char *command) {
-  /* Extract value: */
-  int val = atoi(strchr(command, ' ') + 1);
-  if (val < 0 || val >= pumpsNum) {
-    Serial.println(F("CMD ERROR INVALIDVALUE"));
-    return;
-  }
-
-  /* Acknowledge command: */
-  Serial.println(F("CMD OK"));
-
-  /* Switch pump: */
-  if (val == 0) {
-    Pump::getInstance().off();
-  } else {
-    Pump::getInstance().on(val, 0);
-  }
-}
-
-
 void parseCommand(char *command) {
   if (strcmp(command, "HOME") == 0) {
+    /* ********** HOME ********** */
     /* Go to home position. */
     Serial.println(F("CMD OK BLOCKING"));
     Stepper::getInstance().home();
+
   } else if (strstr(command, "GOTO ") == command) {
+    /* ********** GOTO ********** */
     /* Go to given position. */
     int position = atoi(strchr(command, ' ') + 1);
     Stepper::getInstance().move(position);
+
   } else if (strstr(command, "PUMP ") == command) {
-    /* Start or stop the pump. */
-    cmd_pump(command);
+    /* TODO: Fix this command. */
+    /* ********** PUMP ********** */
+    /* Switch on / off the pump. */
+    int val = atoi(strchr(command, ' ') + 1);
+    if (val < 0 || val >= pumpsNum) {
+      Serial.println(F("CMD ERROR INVALIDVALUE"));
+      return;
+    }
+    Serial.println(F("CMD OK"));
+    if (val == 0) {
+      Pump::getInstance().off();
+    } else {
+      Pump::getInstance().on(val, 0);
+    }
+
   } else {
     /* Unknown command. */
     Serial.println(F("CMD ERROR UNKNOWNCOMMAND"));
   }
 }
 
+
 int lastButtonValue = LOW; /* TODO: Remove this. */
 
 void loop() {
-  /* Check if pump needs to be switched off: */
+  /* Run hardware: */
   Pump::getInstance().run();
-
-  /* Run LEDs: */
+  Stepper::getInstance().run();
   countLEDs.show();
   pumpLEDs.show();
-
-  /* Run stepper: */
-  Stepper::getInstance().run();
 
   /* Check for button press / release: */
   int buttonValue = startButton.get();

@@ -188,11 +188,15 @@ class Stepper {
   private:
     Stepper() : m_homed(false), m_stepper(AccelStepper(AccelStepper::DRIVER, pinStep, pinDirection)),
                 m_targetPosition(0), m_targetPositionReached(true), m_endstopErrorPrinted(false) {
+      /* Setup stepper: */
       m_stepper.setEnablePin(pinEnable);
       m_stepper.setPinsInverted(false, false, true);
       m_stepper.setMaxSpeed(maxStepsPerSecond);
       m_stepper.setAcceleration(acceleration);
       on();
+
+      /* Setup endstop switch: */
+      pinMode(pinEndstop, INPUT);
 
       state_set(F("HOMED"), false);
       state_set(F("TARGET"), -1);
