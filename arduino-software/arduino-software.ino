@@ -5,6 +5,7 @@
 #include "CommandReader.hh"
 #include "SelectorKnob.hh"
 #include "DebouncedSwitch.hh"
+#include "State.hh"
 
 const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);
 uint8_t targetPosition;
@@ -49,10 +50,7 @@ void pumpOn(uint8_t i, long duration) {
   }
 
   digitalWrite(pinPumps[i], HIGH);
-  Serial.print(F("STATE PUMP ON "));
-  Serial.print(i);
-  Serial.print(F(" "));
-  Serial.println(duration);
+  state_set_onoff(F("PUMP"), i, true, duration);
 
   /* Schedule switching off the pump after pumpMaxTime: */
   currentlyActivePump = i;
@@ -62,23 +60,22 @@ void pumpOff() {
   if (currentlyActivePump >= pumpsNum) return;
 
   digitalWrite(pinPumps[currentlyActivePump], LOW);
-  Serial.print(F("STATE PUMP OFF "));
-  Serial.println(currentlyActivePump);
+  state_set_onoff(F("PUMP"), currentlyActivePump, false);
 
   /* Unschedule switching off the pump after pumpMaxTime: */
   taskScheduler.unscheduleTask(taskId_switchOffPump);
 }
 void stepperOn() {
   stepper.enableOutputs();
-  Serial.println(F("STATE STEPPER ON"));
+  state_set_onoff(F("STEPPER"), true);
 }
 void stepperOff() {
   stepper.disableOutputs();
-  Serial.println(F("STATE STEPPER OFF"));
+  state_set_onoff(F("STEPPER"), false);
 
   /* Remember that we're not homed anymore: */
   homed = false;
-  Serial.println(F("STATE HOMED FALSE"));
+  state_set(F("HOMED"), false);
 }
 
 
@@ -113,21 +110,20 @@ void setup() {
 
   /* We're not homed yet: */
   homed = false;
-  Serial.println(F("STATE HOMED FALSE"));
-  Serial.println(F("STATE TARGET -1"));
-  Serial.println(F("STATE POSITION -1"));
+  state_set(F("HOMED"), false);
+  state_set(F("TARGET"), -1);
+  state_set(F("POSITION"), -1);
+  state_set(F("BLOCKED"), false);
 
   /* Report that we're ready: */
-  Serial.print(F("READY POSITIONS "));
-  Serial.print(positionsNum);
-  Serial.print(F(" PUMPS "));
-  Serial.println(pumpsNum);
+  state_set(F("READY"), true);
+  state_set(F("POSITIONS"), positionsNum);
+  state_set(F("PUMPS"), pumpsNum);
 }
 
 
-void cmd_home(char *command) {
-  /* Acknowledge command: */
-  Serial.println(F("CMD OK BLOCKING"));
+void cmd_home() {
+  state_set(F("BLOCKED"), true);
 
   /* Run backwards until the endstop switch is pressed: */
   stepper.setSpeed(-homeStepsPerSecond);
@@ -144,14 +140,16 @@ void cmd_home(char *command) {
 
   /* Remember that we homed: */
   homed = true;
-  Serial.println(F("STATE HOMED TRUE"));
+  state_set(F("HOMED"), true);
 
   /* Remember the current position: */
   targetPosition = 0;
-  Serial.println(F("STATE POSITION 0"));
+  state_set(F("POSITION"), 0);
 
   /* Suppress POSREACHED message: */
   targetPositionReached = true;
+
+  state_set(F("BLOCKED"), false);
 }
 
 
@@ -175,8 +173,7 @@ void cmd_goto(char *command) {
   /* Set the new target: */
   targetPosition = position;
   stepper.moveTo(positionMin + position * stepsPerPosition);
-  Serial.print(F("STATE TARGET "));
-  Serial.println(position);
+  state_set(F("TARGET"), position);
 
   /* Set positionReached: */
   targetPositionReached = false;
@@ -206,7 +203,8 @@ void cmd_pump(char *command) {
 void parseCommand(char *command) {
   if (strcmp(command, "HOME") == 0) {
     /* Go to home position. */
-    cmd_home(command);
+    Serial.println(F("CMD OK BLOCKING"));
+    cmd_home();
   } else if (strstr(command, "GOTO ") == command) {
     /* Go to given position. */
     cmd_goto(command);
@@ -229,24 +227,26 @@ void loop() {
   countLEDs.show();
   pumpLEDs.show();
 
-  /* TODO */
+  /* Check for button press / release: */
   int buttonValue = startButton.get();
   if (buttonValue != lastButtonValue) {
-    Serial.print(F("Button: "));
-    Serial.println(buttonValue);
+    state_set(F("BUTTON"), buttonValue);
     lastButtonValue = buttonValue;
+
+    if (buttonValue == HIGH) {
+      cmd_home();
+      /* TODO */
+    }
   }
 
-  /* TODO */
+  /* Check for selector changes: */
   if (countSelector.run()) {
-    Serial.print(F("Count: "));
-    Serial.println(countSelector.get());
+    state_set(F("SELECTEDCOUNT"), countSelector.get());
     countLEDs.clear();
     countLEDs.fill(countLEDsColor, 0, countSelector.get() + 1);
   }
   if (pumpSelector.run()) {
-    Serial.print(F("Pump: "));
-    Serial.println(pumpSelector.get());
+    state_set(F("SELECTEDPUMP"), pumpSelector.get());
     pumpLEDs.clear();
     pumpLEDs.setPixelColor(pumpSelector.get(), pumpLEDsColor);
   }
@@ -274,8 +274,7 @@ void loop() {
 
   /* Print a message when we arrived at our target: */
   if (!targetPositionReached && stepper.distanceToGo() == 0) {
-    Serial.print(F("STATE POSITION "));
-    Serial.println(targetPosition);
+    state_set(F("POSITION"), targetPosition);
     targetPositionReached = true;
   }
 
