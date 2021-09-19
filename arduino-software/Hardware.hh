@@ -151,18 +151,16 @@ class Stepper {
       state_set(F("BLOCKED"), false);
     }
 
-    void move(char *command) {
-      /* TODO: Remove command parsing code. */
-      /* Check if we're homed: */
-      if (!m_homed) {
-        Serial.println(F("CMD ERROR NOTHOMED"));
+    void move(int position) {
+      /* Check for valid position: */
+      if (position < 0 || position >= positionsNum) {
+        Serial.println(F("CMD ERROR INVALIDPOSITION"));
         return;
       }
 
-      /* Extract position: */
-      int position = atoi(strchr(command, ' ') + 1);
-      if (position < 0 || position >= positionsNum) {
-        Serial.println(F("CMD ERROR INVALIDPOSITION"));
+      /* Check if we're homed: */
+      if (!m_homed) {
+        Serial.println(F("CMD ERROR NOTHOMED"));
         return;
       }
 
@@ -180,6 +178,10 @@ class Stepper {
 
     bool isHomed() {
       return m_homed;
+    }
+
+    bool targetReached() {
+      return m_targetPositionReached;
     }
 
     static const long stepsPerPosition = (positionMax - positionMin) / (positionsNum - 1);

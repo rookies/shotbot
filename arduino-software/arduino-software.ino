@@ -5,6 +5,7 @@
 #include "DebouncedSwitch.hh"
 #include "State.hh"
 #include "Hardware.hh"
+#include "ServingStateMachine.hh"
 
 
 void parseCommand(char *);
@@ -25,6 +26,7 @@ Adafruit_NeoPixel pumpLEDs(pumpsNum, pinPumpLEDs, NEO_KHZ800 + NEO_GRB);
 
 /* Utilities: */
 CommandReader<commandLengthMax> commandReader(parseCommand);
+ServingStateMachine servingMachine;
 
 
 void setup() {
@@ -78,7 +80,8 @@ void parseCommand(char *command) {
     Stepper::getInstance().home();
   } else if (strstr(command, "GOTO ") == command) {
     /* Go to given position. */
-    Stepper::getInstance().move(command);
+    int position = atoi(strchr(command, ' ') + 1);
+    Stepper::getInstance().move(position);
   } else if (strstr(command, "PUMP ") == command) {
     /* Start or stop the pump. */
     cmd_pump(command);
@@ -109,7 +112,7 @@ void loop() {
 
     if (buttonValue == HIGH) {
       Stepper::getInstance().home();
-      /* TODO */
+      servingMachine.start(pumpSelector.get(), countSelector.get() + 1);
     }
   }
 
@@ -127,4 +130,7 @@ void loop() {
 
   /* Parse new commands: */
   commandReader.run();
+
+  /* Run state machine: */
+  servingMachine.run();
 }
