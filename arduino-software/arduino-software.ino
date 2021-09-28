@@ -36,6 +36,8 @@ void setup() {
   Pump::getInstance(); /* TODO: Prevent this from being optimized away? */
   countLEDs.begin();
   pumpLEDs.begin();
+  countLEDs.show();
+  pumpLEDs.show();
 
   /* Report that we're ready: */
   state_set(F("READY"), true);
@@ -86,8 +88,6 @@ void loop() {
   /* Run hardware: */
   Pump::getInstance().run();
   Stepper::getInstance().run();
-  countLEDs.show();
-  pumpLEDs.show();
 
   /* Check for button press / release: */
   int buttonValue = startButton.get();
@@ -98,6 +98,7 @@ void loop() {
     if (buttonValue == HIGH) {
       Stepper::getInstance().home();
       servingMachine.start(pumpSelector.get(), countSelector.get() + 1);
+      /* TODO: What to do if it's already running? Abort? */
     }
   }
 
@@ -106,11 +107,13 @@ void loop() {
     state_set(F("SELECTEDCOUNT"), countSelector.get());
     countLEDs.clear();
     countLEDs.fill(countLEDsColor, 0, countSelector.get() + 1);
+    countLEDs.show();
   }
   if (pumpSelector.run()) {
     state_set(F("SELECTEDPUMP"), pumpSelector.get());
     pumpLEDs.clear();
     pumpLEDs.setPixelColor(pumpSelector.get(), pumpLEDsColor);
+    pumpLEDs.show();
   }
 
   /* Parse new commands: */
