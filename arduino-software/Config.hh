@@ -17,20 +17,19 @@ const uint8_t countLEDsNum = 8;
  * 10x Digital Out (3x stepper, 4x pumps, 2x LEDs, DFPlayer TX)
  * 3x Digital In (endstop, button, DFPlayer RX)
 */
-const uint8_t pinEndstop = 2; /* low active */
+const uint8_t pinEndstop = 5; /* low active */
 const uint8_t pinStep = 3;
 const uint8_t pinDirection = 4;
-const uint8_t pinEnable = 5;
-const uint8_t pinPumps[] = {
-  7, /* previously used for air pump */
-  6, /* previously used for solenoid valve */
-};
-const uint8_t pinCountSelector = A0;
+const uint8_t pinEnable = 2;
+const uint8_t pinPumps[] = { 6, 7, 8, 9 };
+const uint8_t pinCountSelector = A2;
 const uint8_t pinPumpSelector = A1;
-const uint8_t pinTimeSelector = A2; /* TODO */
-const uint8_t pinCountLEDs = 8;
+const uint8_t pinTimeSelector = A7; /* TODO */
+const uint8_t pinCountLEDs = 11;
 const uint8_t pinPumpLEDs = 10;
-const uint8_t pinStartButton = 9;
+const uint8_t pinStartButton = 12;
+const uint8_t pinDFPlayerTX = 13; /* TODO */
+const uint8_t pinDFPlayerRX = A0; /* TODO */
 
 /* Stepper */
 const float maxStepsPerSecond = 10000;
