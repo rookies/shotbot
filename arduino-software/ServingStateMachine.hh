@@ -27,7 +27,7 @@ class ServingStateMachine {
       switch (m_state) {
         case START:
           m_iteration = 0;
-          Pump::getInstance().on(m_pump, 1000); /* TODO: Make duration configurable. */
+          Pump::getInstance().on(m_pump, pumpTime);
           m_state = PUMPING;
           break;
         case PUMPING:
@@ -45,7 +45,7 @@ class ServingStateMachine {
           break;
         case MOVING:
           if (Stepper::getInstance().targetReached()) {
-            Pump::getInstance().on(m_pump, 1000); /* TODO: Make duration configurable. */
+            Pump::getInstance().on(m_pump, pumpTime);
             m_state = PUMPING;
           }
           break;

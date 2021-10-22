@@ -39,6 +39,7 @@ const long positionMin = 800;
 const long positionMax = 52000;
 
 /* Pump */
+const long pumpTime = 20000; /* ms */
 const long pumpMaxTime = 120000; /* ms */
 
 /* Selector knobs */
