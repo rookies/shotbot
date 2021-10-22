@@ -8,7 +8,7 @@ const size_t commandLengthMax = 20;
 
 /* Number of positions, pumps, and LEDs */
 const uint8_t positionsNum = 6;
-const uint8_t pumpsNum = 2;
+const uint8_t pumpsNum = 4;
 const uint8_t countLEDsNum = 8;
 /* TODO: Check that positionsNum <= countLEDsNum */
 
@@ -21,7 +21,7 @@ const uint8_t pinEndstop = 5; /* low active */
 const uint8_t pinStep = 3;
 const uint8_t pinDirection = 4;
 const uint8_t pinEnable = 2;
-const uint8_t pinPumps[] = { 6, 7, 8, 9 };
+const uint8_t pinPumps[pumpsNum] = { 6, 7, 8, 9 };
 const uint8_t pinCountSelector = A2;
 const uint8_t pinPumpSelector = A1;
 const uint8_t pinTimeSelector = A7; /* TODO */
