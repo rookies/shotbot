@@ -106,7 +106,9 @@ void loop() {
   if (countSelector.run()) {
     state_set(F("SELECTEDCOUNT"), countSelector.get());
     countLEDs.clear();
-    countLEDs.fill(countLEDsColor, 0, countSelector.get() + 1);
+    countLEDs.fill(countLEDsColor, countLEDsNum - (countSelector.get() + 1));
+    /* ^- NOTE: The LEDs are reversed (LED0 is on the right), so we need to
+                invert the `first` argument here. */
     countLEDs.show();
   }
   if (pumpSelector.run()) {
