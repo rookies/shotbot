@@ -67,6 +67,7 @@ class Pump {
 
 
 /* This is a singleton. */
+/* TODO: Disable stepper when not in use */
 class Stepper {
   public:
     static Stepper& getInstance() {
